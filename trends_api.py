@@ -1,4 +1,3 @@
-# Import necessary libraries
 from flask import Flask, request, jsonify
 from pytrends.request import TrendReq
 import requests
@@ -40,8 +39,9 @@ def get_trends():
         if trends_data.empty:
             return jsonify({"error": "No data available for the given keywords"}), 400
 
-        # Convert trends data to JSON
+        # Convert timestamps to string format before returning JSON
         trends_dict = trends_data.drop(columns=['isPartial']).to_dict()
+        trends_dict = {str(k): v for k, v in trends_dict.items()}  # Convert keys to strings
 
         return jsonify({"status": "success", "data": trends_dict})
 
