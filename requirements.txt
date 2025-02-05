@@ -1,0 +1,6 @@
+flask
+pytrends
+requests
+pandas
+urllib3
+gunicorn
