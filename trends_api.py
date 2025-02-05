@@ -24,12 +24,12 @@ def get_trends():
         retries = Retry(
             total=5,  # Number of retries
             backoff_factor=0.1,  # Small delay between retries
-            allowed_methods=["GET", "POST"],  # Replaces method_whitelist
+            allowed_methods=["GET", "POST"],  # Fix for method_whitelist error
             status_forcelist=[429, 500, 502, 503, 504]  # Retries only on these errors
         )
         session.mount("https://", HTTPAdapter(max_retries=retries))
 
-        # Initialize Pytrends **without** requests_args
+        # Initialize Pytrends
         pytrends = TrendReq(hl='en-US', tz=360, timeout=(10, 25))
 
         # Set payload and fetch data
@@ -39,14 +39,13 @@ def get_trends():
         if trends_data.empty:
             return jsonify({"error": "No data available for the given keywords"}), 400
 
-        # Convert timestamps to string format before returning JSON
+        # ✅ FIX: Convert timestamps to strings
+        trends_data.index = trends_data.index.astype(str)  # Convert index to string
         trends_dict = trends_data.drop(columns=['isPartial']).to_dict()
-        trends_dict = {str(k): v for k, v in trends_dict.items()}  # Convert keys to strings
 
         return jsonify({"status": "success", "data": trends_dict})
 
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
-if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=5000)
+if __name__ == '__
