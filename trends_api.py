@@ -1,3 +1,4 @@
+# Import necessary libraries
 from flask import Flask, request, jsonify
 from pytrends.request import TrendReq
 import requests
@@ -19,29 +20,21 @@ def get_trends():
     keyword_list = keywords.split(',')
 
     try:
-        # Create a session with retry settings to prevent blocking
+        # Create a requests session with retry settings
         session = requests.Session()
         retries = Retry(
             total=5,  # Number of retries
-            backoff_factor=0.1,
-            allowed_methods=["GET", "POST"],  # Fix for method_whitelist error
-            status_forcelist=[429, 500, 502, 503, 504]  # Retry on these error codes
+            backoff_factor=0.1,  # Small delay between retries
+            allowed_methods=["GET", "POST"],  # Replaces method_whitelist
+            status_forcelist=[429, 500, 502, 503, 504]  # Retries only on these errors
         )
         session.mount("https://", HTTPAdapter(max_retries=retries))
 
-        # Initialize Pytrends with session to avoid Google blocking requests
-        pytrends = TrendReq(
-            hl='en-US',
-            tz=360,
-            timeout=(10, 25),
-            retries=2,
-            backoff_factor=0.1,
-            requests_args={"session": session}
-        )
+        # Initialize Pytrends **without** requests_args
+        pytrends = TrendReq(hl='en-US', tz=360, timeout=(10, 25))
 
+        # Set payload and fetch data
         pytrends.build_payload(keyword_list, cat=0, timeframe=timeframe, geo=region, gprop='')
-
-        # Fetch Google Trends data
         trends_data = pytrends.interest_over_time()
 
         if trends_data.empty:
